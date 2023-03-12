@@ -245,7 +245,9 @@ void MainWindow::connectToDevice(const QString& port, const int baud)
         qInfo() << "Opening as ordinary file";
         QFile file(port);
         if (!file.open(QIODevice::ReadOnly)) {
-            throw std::runtime_error("Failed to open file: " + port.toStdString() + "\n" + strerror(errno));
+            QMessageBox::warning(this,
+                tr("Failed to open file"),
+                tr("Failed to open file: ") + port + ' ' + strerror(errno));
         }
         doc->setText(file.readAll());
         ui->startStopButton->setEnabled(false);
