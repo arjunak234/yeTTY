@@ -103,11 +103,15 @@ void MainWindow::handleReadyRead()
 
 void MainWindow::handleError(const QSerialPort::SerialPortError error)
 {
-    if (error == QSerialPort::ReadError) {
-        const auto errMsg = "ERROR: " + QVariant::fromValue(error).toString().toStdString();
-        qCritical() << error;
-        throw std::runtime_error(errMsg);
+    auto errMsg = "Error: " + QVariant::fromValue(error).toString();
+
+    const auto& portName = "/dev/" + serialPort->portName();
+
+    if (!QFile::exists(portName)) {
+        errMsg += QString(": %1 detached").arg(portName);
     }
+    qCritical() << error;
+    ui->statusbar->showMessage(errMsg);
 }
 
 void MainWindow::handleSaveAction()
@@ -155,6 +159,7 @@ void MainWindow::connectToDevice(const QString& port, const int baud)
     serialPort->setBaudRate(baud);
 
     if (serialPort->open(QIODevice::ReadOnly)) {
+        ui->statusbar->showMessage("Running...");
         //
     } else {
         // We allow the user to open non-serial, static plain text files.
