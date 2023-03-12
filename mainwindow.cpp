@@ -247,7 +247,7 @@ void MainWindow::connectToDevice(const QString& port, const int baud)
         if (!file.open(QIODevice::ReadOnly)) {
             QMessageBox::warning(this,
                 tr("Failed to open file"),
-                tr("Failed to open file: ") + port + ' ' + strerror(errno));
+                tr("Failed to open file") + ": " + port + ' ' + strerror(errno));
         }
         doc->setText(file.readAll());
         ui->startStopButton->setEnabled(false);
