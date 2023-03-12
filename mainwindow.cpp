@@ -219,16 +219,17 @@ void MainWindow::handleTriggerSetupDialogFinished(int result)
 void MainWindow::handleStartStopButton()
 {
     if (currentProgramState == ProgramState::Started) {
+        qInfo() << "Closing connection on button press";
         serialPort->close();
         setProgramState(ProgramState::Stopped);
     } else {
+        qInfo() << "Starting connection on button press";
         connectToDevice(serialPort->portName(), serialPort->baudRate());
     }
 }
 
 void MainWindow::connectToDevice(const QString& port, const int baud)
 {
-    Q_ASSERT(!serialPort->isOpen());
     serialPort->setPortName(port);
     serialPort->setBaudRate(baud);
 
