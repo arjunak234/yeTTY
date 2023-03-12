@@ -53,14 +53,14 @@ MainWindow::MainWindow(QWidget* parent)
     ui->actionClear->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_K));
     ui->actionClear->setIcon(QIcon::fromTheme("edit-clear-all"));
 
-    connect(ui->pushButton, &QPushButton::pressed, this, &MainWindow::handleScrollToEnd);
+    connect(ui->scrollToEndButton, &QPushButton::pressed, this, &MainWindow::handleScrollToEnd);
+    ui->scrollToEndButton->setIcon(QIcon::fromTheme("go-bottom"));
 
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::handleAboutAction);
     ui->actionAbout->setIcon(QIcon::fromTheme("help-about"));
 
     connect(ui->actionTrigger, &QAction::triggered, this, &MainWindow::handleTriggerSetupAction);
-
-    ui->pushButton->setIcon(QIcon::fromTheme("go-bottom"));
+    ui->actionTrigger->setIcon(QIcon::fromTheme("mail-thread-watch"));
 
     connect(serialPort, &QSerialPort::readyRead, this, &MainWindow::handleReadyRead);
     connect(serialPort, &QSerialPort::errorOccurred, this, &MainWindow::handleError);
