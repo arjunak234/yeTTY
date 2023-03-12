@@ -12,8 +12,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets SerialPort)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets SerialPort)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets SerialPort Multimedia)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets SerialPort Multimedia)
 find_package(KF5TextEditor)
 
 set(PROJECT_SOURCES
@@ -25,6 +25,10 @@ set(PROJECT_SOURCES
         portselectiondialog.h
         portselectiondialog.ui
         yetty.version.h.in
+        resources/resources.qrc
+        triggersetupdialog.h
+        triggersetupdialog.cpp
+        triggersetupdialog.ui
 )
 
 configure_file(yetty.version.h.in ${CMAKE_CURRENT_BINARY_DIR}/yetty.version.h @ONLY)
@@ -39,7 +43,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=logical-not-parentheses -pedanti
 -Wno-deprecated-register -Werror=return-type -Werror=uninitialized -Wstrict-aliasing=2")
 
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::SerialPort KF5::TextEditor)
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::SerialPort Qt${QT_VERSION_MAJOR}::Multimedia KF5::TextEditor)
 
 install(TARGETS ${PROJECT_NAME}
     BUNDLE DESTINATION .

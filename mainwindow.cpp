@@ -1,16 +1,18 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 #include "portselectiondialog.h"
+#include "triggersetupdialog.h"
+#include "yetty.version.h"
 
 #include <KTextEditor/Document>
 #include <KTextEditor/Editor>
 #include <KTextEditor/View>
 
-#include "yetty.version.h"
 #include <QApplication>
 #include <QKeyEvent>
 #include <QMessageBox>
 #include <QSerialPortInfo>
+#include <QSound>
 #include <QVBoxLayout>
 #include <kstandardshortcut.h>
 
@@ -18,6 +20,7 @@ MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , serialPort(new QSerialPort(parent))
+    , sound(new QSound(":/notify.wav", parent))
 {
 
     ui->setupUi(this);
@@ -54,6 +57,8 @@ MainWindow::MainWindow(QWidget* parent)
 
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::handleAboutAction);
     ui->actionAbout->setIcon(QIcon::fromTheme("help-about"));
+
+    connect(ui->actionTrigger, &QAction::triggered, this, &MainWindow::handleTriggerSetupAction);
 
     ui->pushButton->setIcon(QIcon::fromTheme("go-bottom"));
 
@@ -95,6 +100,14 @@ std::pair<QString, int> MainWindow::getPortFromUser(const bool useCmdLineArgs) c
 void MainWindow::handleReadyRead()
 {
     const auto d = serialPort->readAll();
+
+    if (triggerActive) {
+        if (d.contains(triggerKeyword)) {
+            triggerMatchCount++;
+            ui->statusbar->showMessage(QString("%1 matches").arg(triggerMatchCount), 3000);
+            sound->play();
+        }
+    }
 
     doc->setReadWrite(true);
     doc->insertText(doc->documentEnd(), d);
@@ -150,6 +163,29 @@ void MainWindow::handleConnectAction()
     qInfo() << "Connecting to new port: " << port << " " << baud;
     handleClearAction();
     connectToDevice(port, baud);
+}
+
+void MainWindow::handleTriggerSetupAction()
+{
+    if (!triggerSetupDialog) {
+        triggerSetupDialog = new TriggerSetupDialog(this);
+        connect(triggerSetupDialog, &QDialog::finished, this, &MainWindow::handleTriggerSetupDilalogFinished);
+    }
+    triggerSetupDialog->open();
+}
+
+void MainWindow::handleTriggerSetupDilalogFinished(int result)
+{
+    if (result == QDialog::Accepted) {
+
+        const auto newKeyword = triggerSetupDialog->getKeyword().toUtf8();
+        if (newKeyword != triggerKeyword) {
+            qInfo() << "Setting new trigger keyword: " << newKeyword;
+            triggerKeyword = newKeyword;
+            triggerActive = !newKeyword.isEmpty();
+            triggerMatchCount = 0;
+        }
+    }
 }
 
 void MainWindow::connectToDevice(const QString& port, const int baud)

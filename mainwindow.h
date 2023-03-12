@@ -16,6 +16,9 @@ class Document;
 class View;
 }
 
+class TriggerSetupDialog;
+class QSound;
+
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
@@ -42,9 +45,17 @@ private slots:
     void handleScrollToEnd();
     void handleAboutAction();
     void handleConnectAction();
+    void handleTriggerSetupAction();
+    void handleTriggerSetupDilalogFinished(int result);
 
 private:
     void connectToDevice(const QString& port, const int baud);
     QSerialPort* serialPort {};
+    QSound* sound {};
+    TriggerSetupDialog* triggerSetupDialog {};
+
+    QByteArray triggerKeyword {};
+    bool triggerActive {};
+    int triggerMatchCount {};
 };
 #endif // MAINWINDOW_H
