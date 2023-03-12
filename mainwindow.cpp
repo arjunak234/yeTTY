@@ -33,6 +33,8 @@ MainWindow::MainWindow(QWidget* parent)
 
     ui->verticalLayout->insertWidget(0, view);
 
+    setWindowTitle(PROJECT_NAME);
+
     const auto [port, baud] = getPortFromUser(QApplication::arguments().size() == 3);
     connectToDevice(port, baud);
 
@@ -230,7 +232,9 @@ void MainWindow::connectToDevice(const QString& port, const int baud)
     serialPort->setPortName(port);
     serialPort->setBaudRate(baud);
 
-    qInfo() << "Connecting to: " << port << " " << baud;
+    setWindowTitle(PROJECT_NAME + QString(" ") + port);
+
+    qInfo() << "Connecting to: " << port << baud;
     if (serialPort->open(QIODevice::ReadOnly)) {
         ui->startStopButton->setEnabled(true);
         ui->statusbar->showMessage("Running...");
