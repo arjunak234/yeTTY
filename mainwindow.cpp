@@ -62,6 +62,8 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ui->actionTrigger, &QAction::triggered, this, &MainWindow::handleTriggerSetupAction);
     ui->actionTrigger->setIcon(QIcon::fromTheme("mail-thread-watch"));
 
+    connect(ui->startStopButton, &QPushButton::pressed, this, &MainWindow::handleStartStopButton);
+
     connect(serialPort, &QSerialPort::readyRead, this, &MainWindow::handleReadyRead);
     connect(serialPort, &QSerialPort::errorOccurred, this, &MainWindow::handleError);
 }
@@ -69,6 +71,27 @@ MainWindow::MainWindow(QWidget* parent)
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::setProgramState(const ProgramState newState)
+{
+    if (newState == currentProgramState) {
+        return;
+    }
+
+    if (newState == ProgramState::Started) {
+        qInfo() << "Program started";
+        ui->startStopButton->setText("Stop");
+        ui->startStopButton->setIcon(QIcon::fromTheme("media-playback-stop"));
+    } else if (newState == ProgramState::Stopped) {
+        qInfo() << "Program stopped";
+        ui->startStopButton->setText("Start");
+        ui->startStopButton->setIcon(QIcon::fromTheme("media-playback-start"));
+    } else {
+        throw std::runtime_error("Unknown state");
+    }
+
+    currentProgramState = newState;
 }
 
 std::pair<QString, int> MainWindow::getPortFromUser(const bool useCmdLineArgs) const
@@ -116,6 +139,9 @@ void MainWindow::handleReadyRead()
 
 void MainWindow::handleError(const QSerialPort::SerialPortError error)
 {
+    if (error == QSerialPort::SerialPortError::NoError) {
+        return;
+    }
     auto errMsg = "Error: " + QVariant::fromValue(error).toString();
 
     const auto& portName = "/dev/" + serialPort->portName();
@@ -123,8 +149,9 @@ void MainWindow::handleError(const QSerialPort::SerialPortError error)
     if (!QFile::exists(portName)) {
         errMsg += QString(": %1 detached").arg(portName);
     }
-    qCritical() << error;
+    qCritical() << "Serial port error: " << error;
     ui->statusbar->showMessage(errMsg);
+    setProgramState(ProgramState::Stopped);
 }
 
 void MainWindow::handleSaveAction()
@@ -160,7 +187,6 @@ void MainWindow::handleConnectAction()
 {
     serialPort->close();
     const auto [port, baud] = getPortFromUser(false);
-    qInfo() << "Connecting to new port: " << port << " " << baud;
     handleClearAction();
     connectToDevice(port, baud);
 }
@@ -180,11 +206,21 @@ void MainWindow::handleTriggerSetupDilalogFinished(int result)
 
         const auto newKeyword = triggerSetupDialog->getKeyword().toUtf8();
         if (newKeyword != triggerKeyword) {
-            qInfo() << "Setting new trigger keyword: " << newKeyword;
+            qInfo() << "Setting new trigger keyword: " << triggerKeyword << " " << newKeyword;
             triggerKeyword = newKeyword;
             triggerActive = !newKeyword.isEmpty();
             triggerMatchCount = 0;
         }
+    }
+}
+
+void MainWindow::handleStartStopButton()
+{
+    if (currentProgramState == ProgramState::Started) {
+        serialPort->close();
+        setProgramState(ProgramState::Stopped);
+    } else {
+        connectToDevice(serialPort->portName(), serialPort->baudRate());
     }
 }
 
@@ -194,9 +230,11 @@ void MainWindow::connectToDevice(const QString& port, const int baud)
     serialPort->setPortName(port);
     serialPort->setBaudRate(baud);
 
+    qInfo() << "Connecting to: " << port << " " << baud;
     if (serialPort->open(QIODevice::ReadOnly)) {
+        ui->startStopButton->setEnabled(true);
         ui->statusbar->showMessage("Running...");
-        //
+        setProgramState(ProgramState::Started);
     } else {
         // We allow the user to open non-serial, static plain text files.
         qInfo() << "Opening as ordinary file";
@@ -205,5 +243,6 @@ void MainWindow::connectToDevice(const QString& port, const int baud)
             throw std::runtime_error("Failed to open file: " + port.toStdString() + "\n" + strerror(errno));
         }
         doc->setText(file.readAll());
+        ui->startStopButton->setEnabled(false);
     }
 }

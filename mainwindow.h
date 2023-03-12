@@ -16,6 +16,12 @@ class Document;
 class View;
 }
 
+enum class ProgramState {
+    Unknown,
+    Started,
+    Stopped
+};
+
 class TriggerSetupDialog;
 class QSound;
 
@@ -33,6 +39,8 @@ private:
     KTextEditor::Document* doc {};
     KTextEditor::View* view {};
 
+    void setProgramState(const ProgramState newState);
+
     [[nodiscard]] std::pair<QString, int> getPortFromUser(const bool useCmdLineArgs) const;
 
 private slots:
@@ -47,6 +55,7 @@ private slots:
     void handleConnectAction();
     void handleTriggerSetupAction();
     void handleTriggerSetupDilalogFinished(int result);
+    void handleStartStopButton();
 
 private:
     void connectToDevice(const QString& port, const int baud);
@@ -57,5 +66,7 @@ private:
     QByteArray triggerKeyword {};
     bool triggerActive {};
     int triggerMatchCount {};
+
+    ProgramState currentProgramState = ProgramState::Unknown;
 };
 #endif // MAINWINDOW_H
