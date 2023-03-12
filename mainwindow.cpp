@@ -195,12 +195,12 @@ void MainWindow::handleTriggerSetupAction()
 {
     if (!triggerSetupDialog) {
         triggerSetupDialog = new TriggerSetupDialog(this);
-        connect(triggerSetupDialog, &QDialog::finished, this, &MainWindow::handleTriggerSetupDilalogFinished);
+        connect(triggerSetupDialog, &QDialog::finished, this, &MainWindow::handleTriggerSetupDialogFinished);
     }
     triggerSetupDialog->open();
 }
 
-void MainWindow::handleTriggerSetupDilalogFinished(int result)
+void MainWindow::handleTriggerSetupDialogFinished(int result)
 {
     if (result == QDialog::Accepted) {
 

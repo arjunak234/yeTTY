@@ -54,7 +54,7 @@ private slots:
     void handleAboutAction();
     void handleConnectAction();
     void handleTriggerSetupAction();
-    void handleTriggerSetupDilalogFinished(int result);
+    void handleTriggerSetupDialogFinished(int result);
     void handleStartStopButton();
 
 private:
