@@ -4,8 +4,20 @@
 #include "mainwindow.h"
 #include "yetty.version.h"
 
+static void printUsage()
+{
+    fputs("Usage: " PROJECT_NAME " PORTNAME BAUDRATE\n"
+          "       " PROJECT_NAME " FILENAME",
+        stderr);
+}
+
 int main(int argc, char* argv[])
 {
+    if (argc > 3) {
+        printUsage();
+        exit(EXIT_FAILURE);
+    }
+
     QApplication a(argc, argv);
 
     QApplication::setOrganizationDomain("aa55.dev");
@@ -21,5 +33,6 @@ int main(int argc, char* argv[])
         return a.exec();
     } catch (std::exception& e) {
         QMessageBox::critical(nullptr, "Error", e.what());
+        return EXIT_FAILURE;
     }
 }
