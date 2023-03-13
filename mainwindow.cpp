@@ -234,6 +234,7 @@ void MainWindow::connectToDevice(const QString& port, const int baud)
     serialPort->setBaudRate(baud);
 
     setWindowTitle(PROJECT_NAME + QString(" ") + port);
+    ui->portInfoLabel->setText(QString("%1 │ %2").arg(serialPort->portName(), QString::number(serialPort->baudRate())));
 
     qInfo() << "Connecting to: " << port << baud;
     if (serialPort->open(QIODevice::ReadOnly)) {

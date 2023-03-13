@@ -18,7 +18,7 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QLabel" name="label">
+       <widget class="QLabel" name="portInfoLabel">
         <property name="text">
          <string/>
         </property>
