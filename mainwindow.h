@@ -42,7 +42,7 @@ private:
 
     void setProgramState(const ProgramState newState);
 
-    [[nodiscard]] std::pair<QString, int> getPortFromUser(const bool useCmdLineArgs) const;
+    [[nodiscard]] std::pair<QString, int> getPortFromUser() const;
 
 private slots:
     void handleReadyRead();
@@ -57,9 +57,10 @@ private slots:
     void handleTriggerSetupAction();
     void handleTriggerSetupDialogFinished(int result);
     void handleStartStopButton();
+    void handleRetryConnection();
 
 private:
-    void connectToDevice(const QString& port, const int baud);
+    void connectToDevice(const QString& port, const int baud, const bool showMsgOnOpenErr = true);
     QSerialPort* serialPort {};
     QSound* sound {};
     TriggerSetupDialog* triggerSetupDialog {};

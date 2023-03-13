@@ -37,10 +37,30 @@ MainWindow::MainWindow(QWidget* parent)
 
     setWindowTitle(PROJECT_NAME);
 
-    const auto [port, baud] = getPortFromUser(QApplication::arguments().size() == 3);
-    connectToDevice(port, baud);
+    const auto args = QApplication::arguments();
 
-    qInfo() << "Opening: " << port << " " << baud;
+    QString portname {};
+    int baud {};
+
+    switch (args.size()) {
+
+    case 3: { // Port and baud in cmdline arg
+        bool ok {};
+        baud = args[2].toInt(&ok);
+        if (!ok || !baud) {
+            throw std::runtime_error("Invalid baud: " + args[2].toStdString());
+        }
+        [[fallthrough]];
+    }
+    case 2: // Filename in cmdline arg
+        portname = args[1];
+        break;
+
+    default: // No args, show msgbox and get it from user
+        std::tie(portname, baud) = getPortFromUser();
+    }
+
+    connectToDevice(portname, baud);
 
     connect(ui->actionConnectToDevice, &QAction::triggered, this, &MainWindow::handleConnectAction);
     ui->actionConnectToDevice->setShortcut(QKeySequence::Open);
@@ -100,30 +120,16 @@ void MainWindow::setProgramState(const ProgramState newState)
     currentProgramState = newState;
 }
 
-std::pair<QString, int> MainWindow::getPortFromUser(const bool useCmdLineArgs) const
+std::pair<QString, int> MainWindow::getPortFromUser() const
 {
 
-    if (useCmdLineArgs) {
-        const auto args = QApplication::arguments();
-
-        Q_ASSERT(args.size() == 3);
-
-        bool ok {};
-        const auto portInt = args[2].toInt(&ok);
-        if (!ok) {
-            throw std::runtime_error("Invalid port: " + args[2].toStdString());
-        }
-        return { args[1], portInt };
-
-    } else {
-        PortSelectionDialog dlg;
-        if (!dlg.exec()) {
-            qInfo() << "No port selection made";
-            throw std::runtime_error("No selection made");
-        }
-        const auto baud = dlg.getSelectedBaud();
-        return { dlg.getSelectedPortLocation(), baud };
+    PortSelectionDialog dlg;
+    if (!dlg.exec()) {
+        qInfo() << "No port selection made";
+        throw std::runtime_error("No selection made");
     }
+    const auto baud = dlg.getSelectedBaud();
+    return { dlg.getSelectedPortLocation(), baud };
 }
 
 void MainWindow::handleReadyRead()
@@ -131,6 +137,8 @@ void MainWindow::handleReadyRead()
     const auto d = serialPort->readAll();
 
     if (triggerActive) {
+        // This assumes that the above read operation reads one line of text and the pattern
+        // to match is within this line and is not split across two lines
         if (d.contains(triggerKeyword)) {
             triggerMatchCount++;
             ui->statusbar->showMessage(QString("%1 matches").arg(triggerMatchCount), 3000);
@@ -148,6 +156,11 @@ void MainWindow::handleError(const QSerialPort::SerialPortError error)
     if (error == QSerialPort::SerialPortError::NoError) {
         return;
     }
+
+    if (serialPort->isOpen()) {
+        serialPort->close();
+    }
+
     auto errMsg = "Error: " + QVariant::fromValue(error).toString();
 
     const auto& portName = "/dev/" + serialPort->portName();
@@ -159,11 +172,8 @@ void MainWindow::handleError(const QSerialPort::SerialPortError error)
     ui->statusbar->showMessage(errMsg);
     setProgramState(ProgramState::Stopped);
 
-    if (serialPort->isOpen()) {
-        serialPort->close();
-    }
-
     if (!timer->isActive()) {
+        // Lets try to reconnect after a while
         timer->start(1000);
     }
 }
@@ -200,7 +210,7 @@ void MainWindow::handleAboutAction()
 void MainWindow::handleConnectAction()
 {
     serialPort->close();
-    const auto [port, baud] = getPortFromUser(false);
+    const auto [port, baud] = getPortFromUser();
     handleClearAction();
     connectToDevice(port, baud);
 }
