@@ -13,6 +13,7 @@
 #include <QMessageBox>
 #include <QSerialPortInfo>
 #include <QSound>
+#include <QTimer>
 #include <QVBoxLayout>
 #include <kstandardshortcut.h>
 
@@ -21,6 +22,7 @@ MainWindow::MainWindow(QWidget* parent)
     , ui(new Ui::MainWindow)
     , serialPort(new QSerialPort(parent))
     , sound(new QSound(":/notify.wav", parent))
+    , timer(new QTimer(parent))
 {
 
     ui->setupUi(this);
@@ -68,6 +70,8 @@ MainWindow::MainWindow(QWidget* parent)
 
     connect(serialPort, &QSerialPort::readyRead, this, &MainWindow::handleReadyRead);
     connect(serialPort, &QSerialPort::errorOccurred, this, &MainWindow::handleError);
+
+    connect(timer, &QTimer::timeout, this, &MainWindow::handleRetryConnection);
 }
 
 MainWindow::~MainWindow()
@@ -154,6 +158,14 @@ void MainWindow::handleError(const QSerialPort::SerialPortError error)
     qCritical() << "Serial port error: " << error;
     ui->statusbar->showMessage(errMsg);
     setProgramState(ProgramState::Stopped);
+
+    if (serialPort->isOpen()) {
+        serialPort->close();
+    }
+
+    if (!timer->isActive()) {
+        timer->start(1000);
+    }
 }
 
 void MainWindow::handleSaveAction()
@@ -228,7 +240,15 @@ void MainWindow::handleStartStopButton()
     }
 }
 
-void MainWindow::connectToDevice(const QString& port, const int baud)
+void MainWindow::handleRetryConnection()
+{
+    if (serialPort->error() != QSerialPort::NoError) {
+        qInfo() << "Retrying connection";
+        connectToDevice(serialPort->portName(), serialPort->baudRate(), false);
+    }
+}
+
+void MainWindow::connectToDevice(const QString& port, const int baud, const bool showMsgOnOpenErr)
 {
     serialPort->setPortName(port);
     serialPort->setBaudRate(baud);
@@ -237,6 +257,7 @@ void MainWindow::connectToDevice(const QString& port, const int baud)
     ui->portInfoLabel->setText(QString("%1 │ %2").arg(serialPort->portName(), QString::number(serialPort->baudRate())));
 
     qInfo() << "Connecting to: " << port << baud;
+    serialPort->clearError();
     if (serialPort->open(QIODevice::ReadOnly)) {
         ui->startStopButton->setEnabled(true);
         ui->statusbar->showMessage("Running...");
@@ -245,7 +266,7 @@ void MainWindow::connectToDevice(const QString& port, const int baud)
         // We allow the user to open non-serial, static plain text files.
         qInfo() << "Opening as ordinary file";
         QFile file(port);
-        if (!file.open(QIODevice::ReadOnly)) {
+        if (!file.open(QIODevice::ReadOnly) && showMsgOnOpenErr) {
             QMessageBox::warning(this,
                 tr("Failed to open file"),
                 tr("Failed to open file") + ": " + port + ' ' + strerror(errno));

@@ -24,6 +24,7 @@ enum class ProgramState {
 
 class TriggerSetupDialog;
 class QSound;
+class QTimer;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -68,5 +69,6 @@ private:
     int triggerMatchCount {};
 
     ProgramState currentProgramState = ProgramState::Unknown;
+    QTimer* timer {};
 };
 #endif // MAINWINDOW_H
