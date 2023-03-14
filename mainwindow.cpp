@@ -134,7 +134,12 @@ std::pair<QString, int> MainWindow::getPortFromUser() const
 
 void MainWindow::handleReadyRead()
 {
-    const auto newdata = serialPort->readAll();
+    auto newdata = serialPort->readAll();
+
+    // Need to remove '\0' from the input or else we might mess up the text shown or
+    // affect string operation downstream. We could replace it with "�" but
+    // the replace operation with multi byte unicode char will become be very expensive.
+    newdata.replace('\0', ' ');
 
     if (triggerActive) {
 
