@@ -134,20 +134,30 @@ std::pair<QString, int> MainWindow::getPortFromUser() const
 
 void MainWindow::handleReadyRead()
 {
-    const auto d = serialPort->readAll();
+    const auto newdata = serialPort->readAll();
 
     if (triggerActive) {
-        // This assumes that the above read operation reads one line of text and the pattern
-        // to match is within this line and is not split across two lines
-        if (d.contains(triggerKeyword)) {
-            triggerMatchCount++;
-            ui->statusbar->showMessage(QString("%1 matches").arg(triggerMatchCount), 3000);
-            sound->play();
+
+        // We will keep pushing whatever data we get into a QByteArray till we reach end of line,
+        // at which point we search for our trigger keyword in the constructed line.
+        for (const auto i : newdata) {
+            if (i == '\n') {
+                if (triggerSearchLine.contains(triggerKeyword)) {
+                    triggerMatchCount++;
+                    ui->statusbar->showMessage(QString("%1 matches").arg(triggerMatchCount), 3000);
+                    sound->play();
+                }
+
+                // clear() will free memory, resize(0) will not
+                triggerSearchLine.resize(0);
+            } else {
+                triggerSearchLine.push_back(i);
+            }
         }
     }
 
     doc->setReadWrite(true);
-    doc->insertText(doc->documentEnd(), d);
+    doc->insertText(doc->documentEnd(), newdata);
     doc->setReadWrite(false);
 }
 

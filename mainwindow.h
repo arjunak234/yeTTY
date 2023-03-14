@@ -22,9 +22,9 @@ enum class ProgramState {
     Stopped
 };
 
-class TriggerSetupDialog;
 class QSound;
 class QTimer;
+class TriggerSetupDialog;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -41,7 +41,6 @@ private:
     KTextEditor::View* view {};
 
     void setProgramState(const ProgramState newState);
-
     [[nodiscard]] std::pair<QString, int> getPortFromUser() const;
 
 private slots:
@@ -71,5 +70,7 @@ private:
 
     ProgramState currentProgramState = ProgramState::Unknown;
     QTimer* timer {};
+
+    QByteArray triggerSearchLine {};
 };
 #endif // MAINWINDOW_H
