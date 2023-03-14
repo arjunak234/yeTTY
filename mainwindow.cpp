@@ -134,18 +134,18 @@ std::pair<QString, int> MainWindow::getPortFromUser() const
 
 void MainWindow::handleReadyRead()
 {
-    auto newdata = serialPort->readAll();
+    auto newData = serialPort->readAll();
 
     // Need to remove '\0' from the input or else we might mess up the text shown or
     // affect string operation downstream. We could replace it with "�" but
     // the replace operation with multi byte unicode char will become be very expensive.
-    newdata.replace('\0', ' ');
+    newData.replace('\0', ' ');
 
     if (triggerActive) {
 
         // We will keep pushing whatever data we get into a QByteArray till we reach end of line,
         // at which point we search for our trigger keyword in the constructed line.
-        for (const auto i : newdata) {
+        for (const auto i : newData) {
             if (i == '\n') {
                 if (triggerSearchLine.contains(triggerKeyword)) {
                     triggerMatchCount++;
@@ -162,7 +162,7 @@ void MainWindow::handleReadyRead()
     }
 
     doc->setReadWrite(true);
-    doc->insertText(doc->documentEnd(), newdata);
+    doc->insertText(doc->documentEnd(), newData);
     doc->setReadWrite(false);
 }
 
