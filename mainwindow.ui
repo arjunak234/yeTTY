@@ -92,6 +92,7 @@
      <string>Tools</string>
     </property>
     <addaction name="actionTrigger"/>
+    <addaction name="actionLongTermRunMode"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -127,6 +128,11 @@
   <action name="actionTrigger">
    <property name="text">
     <string>Trigger</string>
+   </property>
+  </action>
+  <action name="actionLongTermRunMode">
+   <property name="text">
+    <string>Long term run mode</string>
    </property>
   </action>
  </widget>

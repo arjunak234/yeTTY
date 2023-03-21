@@ -14,7 +14,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets SerialPort Multimedia)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets SerialPort Multimedia)
-find_package(KF5TextEditor)
+find_package(KF5TextEditor REQUIRED)
+
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(libzstd REQUIRED IMPORTED_TARGET libzstd)
+
 
 set(PROJECT_SOURCES
         main.cpp
@@ -29,6 +34,9 @@ set(PROJECT_SOURCES
         triggersetupdialog.h
         triggersetupdialog.cpp
         triggersetupdialog.ui
+        longtermrunmodedialog.h
+        longtermrunmodedialog.cpp
+        longtermrunmodedialog.ui
 )
 
 configure_file(yetty.version.h.in ${CMAKE_CURRENT_BINARY_DIR}/yetty.version.h @ONLY)
@@ -43,7 +51,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=logical-not-parentheses -pedanti
 -Wno-deprecated-register -Werror=return-type -Werror=uninitialized -Wstrict-aliasing=2")
 
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::SerialPort Qt${QT_VERSION_MAJOR}::Multimedia KF5::TextEditor)
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::SerialPort
+    Qt${QT_VERSION_MAJOR}::Multimedia
+    KF5::TextEditor
+    PkgConfig::libzstd)
 
 install(TARGETS ${PROJECT_NAME}
     BUNDLE DESTINATION .

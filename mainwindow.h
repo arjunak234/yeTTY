@@ -1,8 +1,15 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <zstd.h>
+
+#include <QElapsedTimer>
 #include <QMainWindow>
 #include <QtSerialPort/QSerialPort>
+
+#include <vector>
+// #include <source_location>
+#include <experimental/source_location>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -25,6 +32,8 @@ enum class ProgramState {
 class QSound;
 class QTimer;
 class TriggerSetupDialog;
+class LongTermRunModeDialog;
+class QElapsedTimer;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -54,15 +63,20 @@ private slots:
     void handleAboutAction();
     void handleConnectAction();
     void handleTriggerSetupAction();
-    void handleTriggerSetupDialogFinished(int result);
+    void handleTriggerSetupDialogDone(int result);
     void handleStartStopButton();
     void handleRetryConnection();
+    void handleLongTermRunModeAction();
+    void handleLongTermRunModeDialogDone(int result);
+    void handleLongTermRunModeTimer();
 
 private:
     void connectToDevice(const QString& port, const int baud, const bool showMsgOnOpenErr = true);
     QSerialPort* serialPort {};
     QSound* sound {};
     TriggerSetupDialog* triggerSetupDialog {};
+
+    QElapsedTimer elapsedTimer;
 
     QByteArray triggerKeyword {};
     bool triggerActive {};
@@ -72,5 +86,20 @@ private:
     QTimer* timer {};
 
     QByteArray triggerSearchLine {};
+
+    // Long term run mode
+    LongTermRunModeDialog* longTermRunModeDialog {};
+    bool longTermRunModeEnabled {};
+    int longTermRunModeMaxMemory {};
+    int longTermRunModeMaxTime {};
+    QString longTermRunModePath {};
+    qint64 longTermRunModeStartTime {};
+    QTimer* longTermRunModeTimer {};
+    ZSTD_CCtx* zstdCtx {};
+    std::vector<char> zstdOutBuffer {};
+    int fileCounter {};
+
+    void writeCompressedFile(const QByteArray& contents, const int counter);
+    void validateZstdResult(const size_t result, const std::experimental::source_location = std::experimental::source_location::current()) const;
 };
 #endif // MAINWINDOW_H
