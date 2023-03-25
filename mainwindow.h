@@ -42,16 +42,6 @@ public:
     MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
 
-private:
-    Ui::MainWindow* ui {};
-
-    KTextEditor::Editor* editor {};
-    KTextEditor::Document* doc {};
-    KTextEditor::View* view {};
-
-    void setProgramState(const ProgramState newState);
-    [[nodiscard]] std::pair<QString, int> getPortFromUser() const;
-
 private slots:
     void handleReadyRead();
     void handleError(const QSerialPort::SerialPortError error);
@@ -71,6 +61,15 @@ private slots:
     void handleLongTermRunModeTimer();
 
 private:
+    Ui::MainWindow* ui {};
+
+    KTextEditor::Editor* editor {};
+    KTextEditor::Document* doc {};
+    KTextEditor::View* view {};
+
+    void setProgramState(const ProgramState newState);
+    [[nodiscard]] std::pair<QString, int> getPortFromUser() const;
+
     void connectToDevice(const QString& port, const int baud, const bool showMsgOnOpenErr = true);
     QSerialPort* serialPort {};
     QSound* sound {};
