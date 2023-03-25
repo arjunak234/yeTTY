@@ -1,9 +1,11 @@
 #include "longtermrunmodedialog.h"
+
 #include "ui_longtermrunmodedialog.h"
 
 #include <QDebug>
 #include <QFileDialog>
 #include <QIntValidator>
+#include <QPushButton>
 #include <QStandardPaths>
 
 LongTermRunModeDialog::LongTermRunModeDialog(QWidget* parent)
@@ -67,9 +69,10 @@ void LongTermRunModeDialog::onInputChanged()
     memoryInMiB = ui->memoryLineEdit->text().toInt(&memoryOk);
 
     if (!timeOk || !memoryOk) {
-        qCritical() << "Invalid input" << ui->timeLineEdit->text() << ui->memoryLineEdit->text();
-        qFatal("Conversion failed");
+        ui->buttonBox->button(QDialogButtonBox::StandardButton::Ok)->setEnabled(false);
+        return;
     }
+    ui->buttonBox->button(QDialogButtonBox::StandardButton::Ok)->setEnabled(true);
 
     ui->msgLabel->setText(QStringLiteral("yeTTY will save the serial data every %1 minutes or %2 MiB"
                                          " (whichever is earlier) and clear the contents from memory(and view)")
