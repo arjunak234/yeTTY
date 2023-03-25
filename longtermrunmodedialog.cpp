@@ -35,8 +35,6 @@ LongTermRunModeDialog::LongTermRunModeDialog(QWidget* parent)
     ui->memoryLineEdit->setValidator(new QIntValidator(1, 512, this));
     ui->timeLineEdit->setValidator(new QIntValidator(1, 60, this));
 
-    ui->groupBox->setChecked(true);
-
     onInputChanged();
 }
 
