@@ -6,6 +6,7 @@
 #include <QElapsedTimer>
 #include <QMainWindow>
 #include <QtSerialPort/QSerialPort>
+#include <QPointer>
 
 #include <vector>
 // #include <source_location>
@@ -21,6 +22,7 @@ namespace KTextEditor {
 class Editor;
 class Document;
 class View;
+class Message;
 }
 
 enum class ProgramState {
@@ -66,6 +68,7 @@ private:
     KTextEditor::Editor* editor {};
     KTextEditor::Document* doc {};
     KTextEditor::View* view {};
+    QPointer<KTextEditor::Message> serialErrorMsg{};
 
     void setProgramState(const ProgramState newState);
     [[nodiscard]] std::pair<QString, int> getPortFromUser() const;
@@ -97,6 +100,7 @@ private:
     ZSTD_CCtx* zstdCtx {};
     std::vector<char> zstdOutBuffer {};
     int fileCounter {};
+
 
 #ifdef SYSTEMD_AVAILABLE
     int inhibitFd {};

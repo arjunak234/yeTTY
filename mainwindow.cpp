@@ -130,6 +130,9 @@ void MainWindow::setProgramState(const ProgramState newState)
 #endif
     if (newState == ProgramState::Started) {
         qInfo() << "Program started";
+        if (serialErrorMsg) {
+            serialErrorMsg->deleteLater();
+        }
         ui->startStopButton->setText("Stop");
         ui->startStopButton->setIcon(QIcon::fromTheme("media-playback-stop"));
     } else if (newState == ProgramState::Stopped) {
@@ -208,6 +211,14 @@ void MainWindow::handleError(const QSerialPort::SerialPortError error)
     }
     qCritical() << "Serial port error: " << error;
     ui->statusbar->showMessage(errMsg);
+    if (!serialErrorMsg) {
+        serialErrorMsg = new KTextEditor::Message(errMsg, KTextEditor::Message::Error);
+    }
+
+    if (errMsg != serialErrorMsg->text()) {
+        serialErrorMsg->setText(errMsg);
+        doc->postMessage(serialErrorMsg);
+    }
     setProgramState(ProgramState::Stopped);
 
     if (!timer->isActive()) {
