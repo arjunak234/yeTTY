@@ -98,7 +98,14 @@ private:
     std::vector<char> zstdOutBuffer {};
     int fileCounter {};
 
+#ifdef SYSTEMD_AVAILABLE
+    int inhibitFd {};
+
+    void setInhibit(const bool enabled);
+
+#endif
+
     void writeCompressedFile(const QByteArray& contents, const int counter);
-    void validateZstdResult(const size_t result, const std::experimental::source_location = std::experimental::source_location::current()) const;
+    static void validateZstdResult(const size_t result, const std::experimental::source_location = std::experimental::source_location::current());
 };
 #endif // MAINWINDOW_H

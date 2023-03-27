@@ -57,6 +57,16 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Widgets
     KF5::TextEditor
     PkgConfig::libzstd)
 
+# systemd inhibit to prevent system from going to sleep while program is active
+option(USE_SYSTEMD_INHIBIT "Use systemd-inhibit" ON)
+pkg_check_modules(libsystemd IMPORTED_TARGET libsystemd)
+if(libsystemd_FOUND)
+    message("Building with systemd inhibit")
+    target_link_libraries(${PROJECT_NAME} PRIVATE PkgConfig::libsystemd)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE SYSTEMD_AVAILABLE)
+endif()
+
+
 install(TARGETS ${PROJECT_NAME}
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

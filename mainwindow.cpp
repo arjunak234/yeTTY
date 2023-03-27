@@ -24,6 +24,10 @@
 #include <QTimer>
 #include <QVBoxLayout>
 
+#ifdef SYSTEMD_AVAILABLE
+#include <systemd/sd-bus.h>
+#endif
+
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -121,6 +125,9 @@ void MainWindow::setProgramState(const ProgramState newState)
         return;
     }
 
+#ifdef SYSTEMD_AVAILABLE
+    setInhibit(newState == ProgramState::Started);
+#endif
     if (newState == ProgramState::Started) {
         qInfo() << "Program started";
         ui->startStopButton->setText("Stop");
@@ -377,6 +384,65 @@ void MainWindow::connectToDevice(const QString& port, const int baud, const bool
     }
 }
 
+#ifdef SYSTEMD_AVAILABLE
+void MainWindow::setInhibit(const bool enabled)
+{
+    if (!enabled) {
+        if (inhibitFd == 0) {
+            qWarning() << "Invalid systemd fd";
+            return;
+        }
+
+        if (auto result = ::close(inhibitFd); !result) {
+            qWarning() << "failed to close systemd fd" << strerror(errno);
+        };
+
+        inhibitFd = 0;
+        return;
+    }
+
+    sd_bus* bus {};
+
+    auto result = sd_bus_open_system(&bus);
+    if (result < 0) {
+        qWarning() << "Failed to open bus" << result;
+        return;
+    }
+
+    int newFd {};
+    sd_bus_message* reply {};
+    sd_bus_error error {};
+
+    result = sd_bus_call_method(bus, "org.freedesktop.login1", "/org/freedesktop/login1", "org.freedesktop.login1.Manager",
+        "Inhibit", // Method to call
+        &error, &reply,
+        "ssss", // Types of function arguments. Four strings here
+        "idle:sleep:shutdown", // What
+        PROJECT_NAME, // Who
+        tr("Serial communication in progress").toUtf8().constData(), // Why
+        "block"); // Mode
+
+    if (result <= 0) {
+        qWarning() << "Failed to make bus call" << result;
+        return;
+    }
+
+    result = sd_bus_message_read_basic(reply, SD_BUS_TYPE_UNIX_FD, &newFd);
+    if (result <= 0 || !newFd) {
+        qWarning() << "failed to read response" << result << newFd;
+        return;
+    }
+
+    if (error.message || error.name) {
+        qWarning() << "Inhibit failed" << error.message << error.name;
+        return;
+    }
+
+    qInfo() << "Inhibted";
+    inhibitFd = newFd;
+}
+#endif
+
 void MainWindow::writeCompressedFile(const QByteArray& contents, const int counter)
 {
     const auto contentsLen = contents.size();
@@ -435,7 +501,7 @@ void MainWindow::writeCompressedFile(const QByteArray& contents, const int count
     file.close();
 }
 
-void MainWindow::validateZstdResult(const size_t result, const std::experimental::source_location srcLoc) const
+void MainWindow::validateZstdResult(const size_t result, const std::experimental::source_location srcLoc)
 {
     if (ZSTD_isError(result)) {
         throw std::runtime_error(std::string("ZSTD error: ") + ZSTD_getErrorName(result) + " " + std::to_string(srcLoc.line()));
