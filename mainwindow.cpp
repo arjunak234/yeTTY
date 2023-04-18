@@ -17,10 +17,11 @@
 
 #include <QApplication>
 #include <QDateTime>
+#include <QFile>
 #include <QKeyEvent>
 #include <QMessageBox>
 #include <QSerialPortInfo>
-#include <QSound>
+#include <QSoundEffect>
 #include <QTimer>
 #include <QVBoxLayout>
 
@@ -32,7 +33,7 @@ MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , serialPort(new QSerialPort(this))
-    , sound(new QSound(":/notify.wav", this))
+    , sound(new QSoundEffect(this))
     , timer(new QTimer(this))
     , longTermRunModeTimer(new QTimer(this))
 {
@@ -86,7 +87,7 @@ MainWindow::MainWindow(QWidget* parent)
     ui->actionQuit->setIcon(QIcon::fromTheme("application-exit"));
 
     connect(ui->actionClear, &QAction::triggered, this, &MainWindow::handleClearAction);
-    ui->actionClear->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_K));
+    ui->actionClear->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_K));
     ui->actionClear->setIcon(QIcon::fromTheme("edit-clear-all"));
 
     connect(ui->scrollToEndButton, &QPushButton::pressed, this, &MainWindow::handleScrollToEnd);
@@ -108,6 +109,8 @@ MainWindow::MainWindow(QWidget* parent)
 
     connect(timer, &QTimer::timeout, this, &MainWindow::handleRetryConnection);
     connect(longTermRunModeTimer, &QTimer::timeout, this, &MainWindow::handleLongTermRunModeTimer);
+
+    sound->setSource(QUrl::fromLocalFile(":/notify.wav"));
 
     qDebug() << "Init complete in:" << elapsedTimer.elapsed();
 }
@@ -175,6 +178,8 @@ void MainWindow::handleReadyRead()
                 if (triggerSearchLine.contains(triggerKeyword)) {
                     triggerMatchCount++;
                     ui->statusbar->showMessage(QString("%1 matches").arg(triggerMatchCount), 3000);
+
+                    // TODO: This is broken. Qt plays the sound for a few times and then stops working.
                     sound->play();
                 }
 

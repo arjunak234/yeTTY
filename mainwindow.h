@@ -31,7 +31,7 @@ enum class ProgramState {
     Stopped
 };
 
-class QSound;
+class QSoundEffect;
 class QTimer;
 class TriggerSetupDialog;
 class LongTermRunModeDialog;
@@ -75,7 +75,7 @@ private:
 
     void connectToDevice(const QString& port, const int baud, const bool showMsgOnOpenErr = true);
     QSerialPort* serialPort {};
-    QSound* sound {};
+    QSoundEffect* sound {};
     TriggerSetupDialog* triggerSetupDialog {};
 
     QElapsedTimer elapsedTimer;
@@ -100,7 +100,6 @@ private:
     ZSTD_CCtx* zstdCtx {};
     std::vector<char> zstdOutBuffer {};
     int fileCounter {};
-
 
 #ifdef SYSTEMD_AVAILABLE
     int inhibitFd {};
