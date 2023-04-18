@@ -5,8 +5,8 @@
 
 #include <QElapsedTimer>
 #include <QMainWindow>
-#include <QtSerialPort/QSerialPort>
 #include <QPointer>
+#include <QtSerialPort/QSerialPort>
 
 #include <vector>
 // #include <source_location>
@@ -68,7 +68,7 @@ private:
     KTextEditor::Editor* editor {};
     KTextEditor::Document* doc {};
     KTextEditor::View* view {};
-    QPointer<KTextEditor::Message> serialErrorMsg{};
+    QPointer<KTextEditor::Message> serialErrorMsg {};
 
     void setProgramState(const ProgramState newState);
     [[nodiscard]] std::pair<QString, int> getPortFromUser() const;
@@ -100,6 +100,8 @@ private:
     ZSTD_CCtx* zstdCtx {};
     std::vector<char> zstdOutBuffer {};
     int fileCounter {};
+
+    static inline constexpr auto HIGHLIGHT_MODE = "Log File (advanced)";
 
 #ifdef SYSTEMD_AVAILABLE
     int inhibitFd {};

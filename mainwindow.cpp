@@ -13,6 +13,7 @@
 
 #include <zstd.h>
 
+#include <malloc.h>
 #include <unistd.h>
 
 #include <QApplication>
@@ -65,7 +66,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     editor = KTextEditor::Editor::instance();
     doc = editor->createDocument(this);
-    doc->setHighlightingMode("Log File (advanced)");
+    doc->setHighlightingMode(HIGHLIGHT_MODE);
 
     view = doc->createView(this);
 
@@ -240,7 +241,10 @@ void MainWindow::handleSaveAction()
 void MainWindow::handleClearAction()
 {
     doc->setReadWrite(true);
-    doc->clear();
+    doc->setModified(false);
+    doc->closeUrl();
+    doc->setHighlightingMode(HIGHLIGHT_MODE);
+    malloc_trim(0);
     doc->setReadWrite(false);
 }
 
